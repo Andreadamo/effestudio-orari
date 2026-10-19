@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<script src="config.js"></script>
+<title>Orari Trainer Effestudio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow&#43;Condensed:wght@500;600;700&amp;family=Barlow:wght@400;500;600&amp;display=swap">
+<style>
+ 
+:root{
+  --bg:#f3f5f6; --surface:#ffffff; --surface-2:#e9eef0; --fg:#121a1f; --muted:#5b6a72; --line:#d3dce0;
+  --accent:#0d6e7a; --accent-fg:#ffffff; --accent-soft:#d6ecef;
+  --ok:#1f7a45; --warn:#a86200; --crit:#b3261e; --warn-soft:#fbecd5; --crit-soft:#f8dcd9;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1417; --surface:#172025; --surface-2:#1e2a30; --fg:#e7eef1; --muted:#93a4ac; --line:#2c3a41;
+  --accent:#4fb9c6; --accent-fg:#071417; --accent-soft:#16363b;
+  --ok:#5cc489; --warn:#f0a845; --crit:#f07a70; --warn-soft:#3a2c14; --crit-soft:#3d1d1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1417; --surface:#172025; --surface-2:#1e2a30; --fg:#e7eef1; --muted:#93a4ac; --line:#2c3a41;
+  --accent:#4fb9c6; --accent-fg:#071417; --accent-soft:#16363b;
+  --ok:#5cc489; --warn:#f0a845; --crit:#f07a70; --warn-soft:#3a2c14; --crit-soft:#3d1d1a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.4}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:18px 48px;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:30px;text-transform:uppercase}
+h2{font-size:20px;text-transform:uppercase}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.sub{color:var(--muted);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:7px 12px;font-weight:500}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+button.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+button.danger{color:var(--crit);border-color:var(--crit)}
+button:disabled{opacity:.5;cursor:not-allowed}
+select,input,textarea{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:7px 9px;min-width:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.seg button{border:0;border-radius:0;background:var(--surface)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
+.week-nav{display:flex;align-items:center;gap:6px}
+.week-label{font-family:var(--display);font-size:20px;font-weight:600;min-width:200px;text-align:center;font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--display);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat.warn{border-color:var(--warn)} .stat.warn b{color:var(--warn)}
+.stat.crit{border-color:var(--crit)} .stat.crit b{color:var(--crit)}
+.notice{border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r);padding:9px 12px;font-size:13px;color:var(--muted)}
+.notice.err{border-color:var(--crit);background:var(--crit-soft);color:var(--fg)}
+.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;min-width:0}
+.day.today{border-color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.day-h{display:flex;justify-content:space-between;align-items:baseline;padding:8px 10px;border-bottom:1px solid var(--line)}
+.day-h strong{font-family:var(--display);font-size:18px;text-transform:uppercase}
+.day-h small{color:var(--muted);font-variant-numeric:tabular-nums}
+.day-b{display:flex;flex-direction:column;gap:6px;padding:8px}
+.empty{color:var(--muted);font-size:13px;padding:6px 2px}
+.shift{border:1px solid var(--line);border-left:4px solid var(--tc,var(--accent));border-radius:4px;padding:6px 8px;display:flex;flex-direction:column;gap:2px;background:var(--surface);text-align:left;width:100%}
+.shift .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:14px}
+.shift .n{font-weight:600}
+.shift .m{font-size:12px;color:var(--muted)}
+.shift.absent{background:var(--warn-soft);border-color:var(--warn)}
+.shift.absent .n{text-decoration:line-through}
+.shift.uncovered{background:var(--crit-soft);border-color:var(--crit)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:99px;border:1px solid currentColor;width:fit-content}
+.pill.ok{color:var(--ok)} .pill.warn{color:var(--warn)} .pill.crit{color:var(--crit)} .pill.mut{color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--tc);display:inline-block;flex:none}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panel-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.who{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);padding:0;width:min(520px,calc(100vw - 32px))}
+dialog::backdrop{background:rgba(10,16,20,.55)}
+form.f{display:flex;flex-direction:column;gap:12px;padding:16px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+label.chk{flex-direction:row;align-items:center;gap:8px;text-transform:none;font-size:14px;color:var(--fg);letter-spacing:0}
+label input,label select,label textarea{color:var(--fg);text-transform:none;letter-spacing:0;font-size:15px}
+.f-act{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.f-act div{display:flex;gap:8px}
+.swatches{display:flex;flex-wrap:wrap;gap:6px}
+.swatches button{width:28px;height:28px;border-radius:50%;padding:0;background:var(--sw);border:2px solid transparent}
+.swatches button[aria-pressed="true"]{border-color:var(--fg)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:var(--r);font-size:14px;max-width:calc(100vw - 32px)}
+.ro .edit-only{display:none!important}
+.cal{--hh:46px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.cal-row{display:grid;grid-template-columns:54px repeat(var(--n),minmax(0,1fr))}
+.cal-head{border-bottom:1px solid var(--line)}
+.dh{padding:6px 4px 8px;text-align:center;border-left:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.dh .dn{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.dh .dd{font-family:var(--display);font-size:24px;font-weight:600;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;font-variant-numeric:tabular-nums}
+.dh.today .dn{color:var(--accent)} .dh.today .dd{background:var(--accent);color:var(--accent-fg)}
+.cal-all{border-bottom:1px solid var(--line);min-height:28px}
+.cal-all .lab{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 4px;text-align:right}
+.adc{border-left:1px solid var(--line);padding:3px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.chip{display:block;width:100%;text-align:left;border:0;border-radius:4px;padding:2px 6px;font-size:12px;font-weight:600;color:#fff;background:var(--tc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.unc{background:var(--crit)}
+.cal-body{max-height:72vh;overflow-y:auto;position:relative}
+.hrs{position:relative}
+.hrs span{position:absolute;right:6px;transform:translateY(-50%);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.col{position:relative;border-left:1px solid var(--line);cursor:pointer;background-image:repeating-linear-gradient(to bottom,var(--line) 0,var(--line) 1px,transparent 1px,transparent var(--hh))}
+.col.today{background-color:var(--accent-soft)}
+.ev{position:absolute;border:0;border-radius:5px;padding:3px 6px;color:#fff;background:var(--tc);text-align:left;overflow:hidden;font-size:12px;line-height:1.25;box-shadow:0 0 0 1px var(--surface);display:flex;flex-direction:column;cursor:pointer}
+.ev b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev i{font-style:normal;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.ev.absent{background:repeating-linear-gradient(135deg,var(--tc) 0 6px,color-mix(in srgb,var(--tc) 55%,var(--surface)) 6px 12px)}
+.ev.unc{outline:2px solid var(--crit);outline-offset:-2px}
+.ev .tag{margin-top:2px;align-self:flex-start;background:rgba(0,0,0,.35);border-radius:3px;padding:0 4px;font-size:10px;font-weight:600;text-transform:uppercase}
+.now{position:absolute;left:0;right:0;height:2px;background:var(--crit);z-index:2;pointer-events:none}
+.now::before{content:"";position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:var(--crit)}
+.seg.sites{flex-wrap:wrap}
+.seg.sites button{display:inline-flex;align-items:center;gap:6px}
+.seg.sites button::before{content:"";width:8px;height:8px;border-radius:2px;border:1.5px solid currentColor;background:transparent}
+.seg.sites button[aria-pressed="true"]::before{background:currentColor}
+.daytabs{display:none;gap:6px;overflow-x:auto;padding-bottom:2px}
+.daytabs button{flex:none;padding:6px 10px}
+.daytabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.hours td.num,.hours th.num{text-align:right}
+.hours tr.grp td{background:var(--surface-2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.hours tr.tot td{font-weight:600;border-top:2px solid var(--line)}
+.hbar{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.hbar span{display:block;height:6px;border-radius:3px;background:var(--tc);min-width:2px}
+.zero{color:var(--muted)}
+@media (max-width:900px){.cols{grid-template-columns:1fr}.week-label{min-width:0}}
+@media (max-width:760px){.daytabs{display:flex}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+
+<div class="wrap" id="app">
+  <header class="top">
+    <div>
+      <h1>Orari Trainer</h1>
+      <div class="sub">Effestudio Training Center · sincronizzato con il calendario “Disponibilità Trainer e assenze”</div>
+    </div>
+    <div class="bar">
+      <div class="seg" role="group" aria-label="Vista">
+        <button id="v-week" aria-pressed="true">Calendario</button>
+        <button id="v-trainer" aria-pressed="false">Vista ore</button>
+        <button id="v-abs" aria-pressed="false">Assenze</button>
+      </div>
+      <div class="seg sites" role="group" aria-label="Sedi" id="f-sites"></div>
+      <select id="f-trainer" aria-label="Filtra trainer"><option value="all">Tutti i trainer</option></select>
+    </div>
+  </header>
+
+  <div class="bar" style="justify-content:space-between">
+    <div class="week-nav">
+      <button id="w-prev" aria-label="Settimana precedente">‹</button>
+      <div class="week-label" id="w-label"></div>
+      <button id="w-next" aria-label="Settimana successiva">›</button>
+      <button id="w-today" class="ghost">Oggi</button>
+    </div>
+    <div class="bar edit-only">
+      <button id="b-slot" class="primary">+ Turno</button>
+      <button id="b-abs">+ Assenza</button>
+      <button id="b-trainer">+ Trainer</button>
+      <button id="b-sync">Sincronizza calendario</button>
+    </div>
+  </div>
+
+  <div id="status" class="notice">Caricamento orari…</div>
+  <section class="stats" id="stats"></section>
+
+  <section id="view-week" style="display:flex;flex-direction:column;gap:8px"><div class="daytabs" id="daytabs"></div><div id="grid"></div></section>
+  <section id="view-trainer" hidden></section>
+  <section id="view-abs" hidden></section>
+</div>
+
+<dialog id="dlg-slot"><form class="f" id="form-slot" method="dialog">
+  <h2 id="slot-title">Turno</h2>
+  <div class="row">
+    <label>Trainer<select id="s-trainer" required></select></label>
+    <label>Giorno<select id="s-day" required></select></label>
+  </div>
+  <div class="row">
+    <label>Inizio<input id="s-start" type="time" required step="300"></label>
+    <label>Fine<input id="s-end" type="time" required step="300"></label>
+  </div>
+  <div class="row">
+    <label>Ruolo<input id="s-role" list="roles" required placeholder="Classi, Sala, LAB, PT…"></label>
+    <label>Sede<input id="s-site" list="sites" placeholder="Effestudio"></label>
+  </div>
+  <div class="row">
+    <label>Valido dal<input id="s-from" type="date" required></label>
+    <label>Valido fino al<input id="s-to" type="date"></label>
+  </div>
+  <label>Note<input id="s-note" maxlength="200"></label>
+  <div class="f-act">
+    <button type="button" id="s-del" class="danger">Elimina turno</button>
+    <div><button type="button" class="ghost" data-close>Annulla</button><button class="primary" id="s-save">Salva</button></div>
+  </div>
+</form></dialog>
+
+<dialog id="dlg-abs"><form class="f" id="form-abs" method="dialog">
+  <h2 id="abs-title">Assenza</h2>
+  <div class="row">
+    <label>Trainer<select id="a-trainer" required></select></label>
+    <label>Tipo<select id="a-type"><option>Ferie</option><option>Malattia</option><option>Permesso</option><option>Formazione</option><option>Cambio turno</option><option>Altro</option></select></label>
+  </div>
+  <div class="row">
+    <label>Dal<input id="a-from" type="date" required></label>
+    <label>Al<input id="a-to" type="date" required></label>
+  </div>
+  <label class="chk"><input type="checkbox" id="a-allday" checked> Tutta la giornata</label>
+  <div class="row" id="a-times" hidden>
+    <label>Dalle<input id="a-start" type="time" step="300"></label>
+    <label>Alle<input id="a-end" type="time" step="300"></label>
+  </div>
+  <label>Sostituto<select id="a-sub"><option value="">— nessuno (turno scoperto) —</option></select></label>
+  <label>Note<input id="a-note" maxlength="200"></label>
+  <div class="f-act">
+    <button type="button" id="a-del" class="danger">Elimina assenza</button>
+    <div><button type="button" class="ghost" data-close>Annulla</button><button class="primary">Salva</button></div>
+  </div>
+</form></dialog>
+
+<dialog id="dlg-trainer"><form class="f" id="form-trainer" method="dialog">
+  <h2 id="tr-title">Trainer</h2>
+  <div class="row"><label>Nome<input id="t-name" required maxlength="60"></label><label>Tipo<select id="t-kind"><option>Trainer</option><option>Socio</option></select></label></div>
+  <label>Colore</label>
+  <div class="swatches" id="t-colors"></div>
+  <label class="chk"><input type="checkbox" id="t-active" checked> Attivo</label>
+  <div class="f-act">
+    <button type="button" id="t-del" class="danger">Elimina trainer</button>
+    <div><button type="button" class="ghost" data-close>Annulla</button><button class="primary">Salva</button></div>
+  </div>
+</form></dialog>
+
+<datalist id="roles"><option>Classi</option><option>Sala pesi</option><option>LAB</option><option>Personal Training</option><option>Hyrox</option><option>Reception</option></datalist>
+<datalist id="sites"><option>Cecina Center</option><option>LAB</option><option>Pisa</option><option>Tennis</option></datalist>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const CAL_ID="58b50d80d6608afa35da5c96bcad889669e06b656def3f845dfca56a4bb2aa4c@group.calendar.google.com";
+const GCAL="Google Calendar";
+const DAYS=["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"];
+const BYDAY=["MO","TU","WE","TH","FR","SA","SU"];
+ 
+const COLORS=[["#0d6e7a","7"],["#c2410c","6"],["#7c3aed","3"],["#15803d","10"],["#be185d","4"],["#a16207","5"],["#1d4ed8","9"],["#b91c1c","11"],["#4b5563","8"],["#0e7490","2"]];
+
+const S={trainers:[],slots:[],absences:[],week:monday(today()),view:"week",filter:"all",canEdit:true,pin:"",busy:false};
+const $=id=>document.getElementById(id);
+
+ 
+function pad(n){return String(n).padStart(2,"0")}
+function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function parse(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
+function today(){return iso(new Date())}
+function addDays(s,n){const d=parse(s);d.setDate(d.getDate()+n);return iso(d)}
+function isoDay(s){return (parse(s).getDay()+6)%7}
+function monday(s){return addDays(s,-isoDay(s))}
+function fmt(s,o){return parse(s).toLocaleDateString("it-IT",o||{day:"numeric",month:"short"})}
+function mins(t){const [h,m]=(t||"0:0").split(":").map(Number);return h*60+m}
+function hrs(m){const h=Math.floor(m/60),r=m%60;return r?h+"h"+pad(r):h+"h"}
+
+ 
+const tr=id=>S.trainers.find(t=>t.id===id);
+const tname=id=>tr(id)?.name||"—";
+const tcolor=id=>tr(id)?.color||"#4b5563";
+const SITE_ORDER=["Cecina Center","LAB","Pisa","Tennis"];
+const SITE_LABEL={"LAB":"Cecina LAB"};
+const siteLabel=x=>SITE_LABEL[x]||x;
+function allSites(){const u=new Set(S.slots.filter(s=>!s.deleted&&s.site).map(s=>s.site));SITE_ORDER.forEach(x=>u.add(x));return[...u].sort((a,b)=>{const i=SITE_ORDER.indexOf(a),j=SITE_ORDER.indexOf(b);return(i<0?99:i)-(j<0?99:j)||a.localeCompare(b)})}
+function passSite(s){return !S.sites||!S.sites.size||S.sites.has(s.site||"")}
+function renderSites(){const sel=S.sites||new Set();$("f-sites").innerHTML=allSites().map(x=>`<button type="button" data-site="${esc(x)}" aria-pressed="${sel.has(x)}">${esc(siteLabel(x))}</button>`).join("")}
+function slotOn(s,d){return !s.deleted&&passSite(s)&&s.day===isoDay(d)&&s.validFrom<=d&&(!s.validTo||d<=s.validTo)}
+function absFor(s,d){return S.absences.find(a=>!a.deleted&&a.trainerId===s.trainerId&&a.from<=d&&d<=a.to&&(a.allDay||(mins(a.start)<mins(s.end)&&mins(s.start)<mins(a.end))))}
+function passFilter(id){return S.filter==="all"||S.filter===id}
+function overlaps(){const out=new Set();const act=S.slots.filter(s=>!s.deleted);
+  for(let i=0;i<act.length;i++)for(let j=i+1;j<act.length;j++){const a=act[i],b=act[j];
+    if(a.trainerId===b.trainerId&&a.day===b.day&&mins(a.start)<mins(b.end)&&mins(b.start)<mins(a.end)&&a.validFrom<=(b.validTo||"9999")&&b.validFrom<=(a.validTo||"9999")){out.add(a.id);out.add(b.id)}}
+  return out}
+
+/* ---------- render ---------- */
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function syncPill(o){if(!S.canEdit)return"";
+  if(o.syncState==="ok")return"";
+  if(String(o.syncState).startsWith("error"))return`<span class="pill crit" title="${esc(String(o.syncState).replace(/^error:\s*/,""))}">Errore sync</span>`;
+  return`<span class="pill mut">Da sincronizzare</span>`}
+
+function render(){
+  document.body.classList.toggle("ro",!S.canEdit);
+  const end=addDays(S.week,6);
+  $("w-label").textContent=fmt(S.week)+" – "+fmt(end,{day:"numeric",month:"short",year:"numeric"});
+  const sel=$("f-trainer"),cur=S.filter;
+  sel.innerHTML='<option value="all">Tutti i trainer</option>'+S.trainers.slice().sort(byName).map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("");
+  sel.value=S.trainers.some(t=>t.id===cur)?cur:"all";
+  renderSites();renderStats();renderWeek();renderTrainers();renderAbsences();
+}
+const byName=(a,b)=>a.name.localeCompare(b.name,"it");
+
+function weekShifts(){const out=[];for(let i=0;i<7;i++){const d=addDays(S.week,i);
+  S.slots.filter(s=>slotOn(s,d)&&passFilter(s.trainerId)).forEach(s=>out.push({s,d,a:absFor(s,d)}))}return out}
+
+function renderStats(){
+  const ws=weekShifts();const tot=ws.reduce((m,x)=>m+(x.a&&!x.a.subId?0:mins(x.s.end)-mins(x.s.start)),0);
+  const unc=ws.filter(x=>x.a&&!x.a.subId).length;
+  const absW=S.absences.filter(a=>!a.deleted&&passFilter(a.trainerId)&&a.from<=addDays(S.week,6)&&a.to>=S.week).length;
+  const pend=[...S.slots,...S.absences].filter(o=>o.syncState!=="ok").length;
+  const ov=overlaps().size;
+  const items=[["Turni in settimana",ws.length,""],["Ore coperte",hrs(tot),""],["Assenze in settimana",absW,absW?"warn":""],["Turni scoperti",unc,unc?"crit":""]];
+  if(S.canEdit){items.push(["Da sincronizzare",pend,pend?"warn":""]);if(ov)items.push(["Sovrapposizioni",ov,"crit"])}
+  $("stats").innerHTML=items.map(([l,v,c])=>`<div class="stat ${c}"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+}
+
+function shiftHTML(s,d,a){
+  const sub=a&&a.subId?tname(a.subId):"";
+  const cls=a?(a.subId?"absent":"absent uncovered"):"";
+  const tag=S.canEdit?"button":"div";
+  return`<${tag} class="shift ${cls}" style="--tc:${esc(tcolor(s.trainerId))}" data-slot="${esc(s.id)}" ${S.canEdit?'type="button"':""}>
+    <span class="t">${esc(s.start)}–${esc(s.end)}</span>
+    <span class="n">${esc(tname(s.trainerId))}</span>
+    <span class="m">${esc(s.role||"")}${s.site?" · "+esc(s.site):""}</span>
+    ${a?`<span class="pill ${a.subId?"warn":"crit"}">${esc(a.type)}${sub?" → "+esc(sub):" · scoperto"}</span>`:""}
+    ${s.note?`<span class="m">${esc(s.note)}</span>`:""}
+    ${syncPill(s)}
+  </${tag}>`}
+
+const HH=46;
+const mobile=()=>window.matchMedia("(max-width:760px)").matches;
+function layoutDay(items){
+  items.sort((x,y)=>x.st-y.st||y.en-x.en);
+  let cluster=[],cEnd=-1;const out=[];
+  const flush=()=>{const cols=[];cluster.forEach(it=>{let c=cols.findIndex(e=>e<=it.st);if(c<0){c=cols.length;cols.push(0)}cols[c]=it.en;it.col=c});cluster.forEach(it=>it.ncol=cols.length);out.push(...cluster);cluster=[]};
+  items.forEach(it=>{if(it.st>=cEnd&&cluster.length){flush();cEnd=-1}cluster.push(it);cEnd=Math.max(cEnd,it.en)});
+  if(cluster.length)flush();return out}
+function renderWeek(){
+  const t=today(),mob=mobile();
+  if(S.mDay==null)S.mDay=Math.max(0,Math.min(6,(parse(t)-parse(S.week))/864e5|0));
+  const idx=mob?[S.mDay]:[0,1,2,3,4,5,6];
+  $("daytabs").innerHTML=DAYS.map((d,i)=>`<button type="button" data-dt="${i}" aria-pressed="${i===S.mDay}">${d.slice(0,3)} ${parse(addDays(S.week,i)).getDate()}</button>`).join("");
+  const days=idx.map(i=>{const d=addDays(S.week,i);
+    const sl=S.slots.filter(s=>slotOn(s,d)&&passFilter(s.trainerId)).map(s=>({s,a:absFor(s,d),st:mins(s.start),en:mins(s.end)}));
+    const ab=S.absences.filter(a=>!a.deleted&&a.from<=d&&d<=a.to&&(passFilter(a.trainerId)||(a.subId&&passFilter(a.subId))));
+    return{i,d,sl,ab}});
+  let lo=7*60,hi=21*60;days.forEach(x=>x.sl.forEach(e=>{lo=Math.min(lo,e.st);hi=Math.max(hi,e.en)}));
+  lo=Math.floor(lo/60)*60;hi=Math.ceil(hi/60)*60;S.gridLo=lo;
+  const rows=(hi-lo)/60,H=rows*HH;
+  let head=`<div class="cal-row cal-head"><div></div>`+days.map(x=>`<div class="dh ${x.d===t?"today":""}"><span class="dn">${DAYS[x.i].slice(0,3)}</span><span class="dd">${parse(x.d).getDate()}</span></div>`).join("")+`</div>`;
+  let all=`<div class="cal-row cal-all"><div class="lab">Assenze</div>`+days.map(x=>`<div class="adc">${x.ab.map(a=>`<button type="button" class="chip ${a.subId?"":"unc"}" style="--tc:${esc(tcolor(a.trainerId))}" data-abs="${esc(a.id)}" title="${esc(tname(a.trainerId))} · ${esc(a.type)}${a.subId?" → "+esc(tname(a.subId)):" · scoperto"}">${esc(tname(a.trainerId).split(" ")[0])} · ${esc(a.type)}${a.subId?" → "+esc(tname(a.subId).split(" ")[0]):""}</button>`).join("")}</div>`).join("")+`</div>`;
+  let hrsCol=`<div class="hrs" style="height:${H}px">`+Array.from({length:rows-1},(_,k)=>`<span style="top:${(k+1)*HH}px">${pad(lo/60+k+1)}:00</span>`).join("")+`</div>`;
+  const nowM=(()=>{const n=new Date();return n.getHours()*60+n.getMinutes()})();
+  let cols=days.map(x=>{
+    const evs=layoutDay(x.sl).map(e=>{const s=e.s,a=e.a;
+      const top=(e.st-lo)/60*HH,h=Math.max(18,(e.en-e.st)/60*HH-2),w=100/e.ncol;
+      const cls=a?("absent"+(a.subId?"":" unc")):"";
+      const tag=a?`<span class="tag">${a.subId?"sost. "+esc(tname(a.subId).split(" ")[0]):"scoperto"}</span>`:"";
+      return`<button type="button" class="ev ${cls}" data-slot="${esc(s.id)}" style="--tc:${esc(tcolor(s.trainerId))};top:${top}px;height:${h}px;left:calc(${e.col*w}% + 2px);width:calc(${w}% - 4px)" title="${esc(s.start)}–${esc(s.end)} ${esc(tname(s.trainerId))} · ${esc(s.role||"")}${s.site?" · "+esc(s.site):""}${s.note?" · "+esc(s.note):""}"><b>${esc(tname(s.trainerId))}</b><i>${esc(s.start)}–${esc(s.end)}${s.role?" · "+esc(s.role):""}</i>${tag}</button>`}).join("");
+    const now=x.d===t&&nowM>=lo&&nowM<=hi?`<div class="now" style="top:${(nowM-lo)/60*HH}px"></div>`:"";
+    return`<div class="col ${x.d===t?"today":""}" data-col="${x.i}" style="height:${H}px">${evs}${now}</div>`}).join("");
+  $("grid").innerHTML=`<div class="cal" style="--n:${days.length};--hh:${HH}px">${head}${all}<div class="cal-body" id="cal-body"><div class="cal-row">${hrsCol}${cols}</div></div></div>`;
+  const cb=$("cal-body");if(cb&&!S.scrolled){cb.scrollTop=Math.max(0,((Math.max(lo,Math.min(nowM,hi))-lo)/60-1.5)*HH);S.scrolled=true}
+}
+
+function weekHours(start){
+  const map={};const add=(id,i,m)=>{if(!id)return;(map[id]=map[id]||[0,0,0,0,0,0,0])[i]+=m};
+  for(let i=0;i<7;i++){const d=addDays(start,i);
+    S.slots.filter(s=>slotOn(s,d)).forEach(s=>{const a=absFor(s,d),m=mins(s.end)-mins(s.start);add(a?a.subId:s.trainerId,i,m)})}
+  return map}
+function monthHours(ref){
+  const r=parse(ref),first=iso(new Date(r.getFullYear(),r.getMonth(),1)),last=iso(new Date(r.getFullYear(),r.getMonth()+1,0));
+  const map={};for(let d=first;d<=last;d=addDays(d,1))S.slots.filter(s=>slotOn(s,d)).forEach(s=>{const a=absFor(s,d),id=a?a.subId:s.trainerId;if(id)map[id]=(map[id]||0)+mins(s.end)-mins(s.start)});
+  return{map,label:parse(first).toLocaleDateString("it-IT",{month:"long"})}}
+function renderTrainers(){
+  const wk=weekHours(S.week),mo=monthHours(addDays(S.week,3));
+  const list=S.trainers.filter(t=>passFilter(t.id)&&(t.active!==false||wk[t.id]));
+  const max=Math.max(60,...list.map(t=>(wk[t.id]||[]).reduce((a,b)=>a+b,0)));
+  const cell=m=>m?`<td class="num">${hrs(m)}</td>`:`<td class="num zero">–</td>`;
+  const tot=[0,0,0,0,0,0,0];let totW=0,totM=0;
+  const row=t=>{const d=wk[t.id]||[0,0,0,0,0,0,0],w=d.reduce((a,b)=>a+b,0);d.forEach((m,i)=>tot[i]+=m);totW+=w;totM+=mo.map[t.id]||0;
+    return`<tr><td><span class="who" style="--tc:${esc(t.color)}"><span class="dot"></span>${esc(t.name)}</span>${t.active===false?' <span class="pill mut">Non attivo</span>':""}</td>${d.map(cell).join("")}
+      <td class="num" style="--tc:${esc(t.color)}"><div class="hbar"><span style="width:${Math.round(w/max*80)}px"></span><b>${hrs(w)}</b></div></td>
+      <td class="num">${hrs(mo.map[t.id]||0)}</td><td><button class="ghost" data-trainer="${esc(t.id)}">Modifica</button></td></tr>`};
+  const grp=(k,lab)=>{const g=list.filter(t=>(t.kind||"Trainer")===k).sort(byName);return g.length?`<tr class="grp"><td colspan="11">${lab}</td></tr>`+g.map(row).join(""):""};
+  const body=grp("Trainer","Trainer")+grp("Socio","Trainer soci");
+  $("view-trainer").innerHTML=`<div class="panel"><div class="panel-h"><h2>Vista ore · settimana ${fmt(S.week)} – ${fmt(addDays(S.week,6))}</h2><span class="sub">Sedi: ${esc(S.sites&&S.sites.size?[...S.sites].map(siteLabel).join(", "):"tutte")}. Ore da turni in calendario. Assenza con sostituto: ore al sostituto. Scoperto: non conteggiate.</span></div>
+    <div class="tbl-wrap"><table class="hours"><thead><tr><th>Trainer</th>${DAYS.map((d,i)=>`<th class="num">${d.slice(0,3)} ${parse(addDays(S.week,i)).getDate()}</th>`).join("")}<th class="num">Settimana</th><th class="num">Mese di ${esc(mo.label)}</th><th></th></tr></thead>
+    <tbody>${body||'<tr><td colspan="11" class="sub">Nessun trainer inserito.</td></tr>'}
+    ${body?`<tr class="tot"><td>Totale</td>${tot.map(cell).join("")}<td class="num">${hrs(totW)}</td><td class="num">${hrs(totM)}</td><td></td></tr>`:""}</tbody></table></div></div>`;
+}
+
+function renderAbsences(){
+  const list=S.absences.filter(a=>!a.deleted&&passFilter(a.trainerId)&&a.to>=addDays(today(),-30)).sort((a,b)=>a.from.localeCompare(b.from));
+  const rows=list.map(a=>`<tr><td><span class="who" style="--tc:${esc(tcolor(a.trainerId))}"><span class="dot"></span>${esc(tname(a.trainerId))}</span></td>
+    <td>${esc(a.type)}</td><td>${fmt(a.from)}${a.to!==a.from?" – "+fmt(a.to):""}</td><td>${a.allDay?"Giornata":esc(a.start)+"–"+esc(a.end)}</td>
+    <td>${a.subId?esc(tname(a.subId)):'<span class="pill crit">Scoperto</span>'}</td><td>${esc(a.note||"")} ${syncPill(a)}</td>
+    <td class="edit-only"><button class="ghost" data-abs="${esc(a.id)}">Modifica</button></td></tr>`).join("");
+  $("view-abs").innerHTML=`<div class="panel"><div class="panel-h"><h2>Assenze e sostituzioni</h2><span class="sub">Ultimi 30 giorni e future · cambi da comunicare almeno 14 giorni prima</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Trainer</th><th>Tipo</th><th>Periodo</th><th>Orario</th><th>Sostituto</th><th>Note</th><th class="edit-only"></th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="7" class="sub">Nessuna assenza registrata.</td></tr>'}</tbody></table></div></div>`;
+}
+
+function setView(v){S.view=v;["week","trainer","abs"].forEach(k=>{$("view-"+k).hidden=k!==v;$("v-"+k).setAttribute("aria-pressed",String(k===v))});try{localStorage.setItem("ot-view",v)}catch(e){}}
+
+let toastT;function toast(m){const t=$("toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+function status(m,err){const s=$("status");if(!m){s.hidden=true;return}s.hidden=false;s.textContent=m;s.classList.toggle("err",!!err)}
+
+/* ---------- dialogs ---------- */
+function trainerOptions(sel,blank){sel.innerHTML=(blank||"")+S.trainers.filter(t=>t.active!==false).sort(byName).map(t=>`<option value="${esc(t.id)}">${esc(t.name)}</option>`).join("")}
+function armDelete(btn,fn){btn.textContent=btn.dataset.label;btn.onclick=()=>{if(btn.dataset.armed){fn()}else{btn.dataset.armed="1";btn.textContent="Conferma eliminazione"}};delete btn.dataset.armed}
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
+
+let editSlot=null;
+function openSlot(id,day,start){
+  if(!S.trainers.length){toast("Aggiungi prima un trainer");return openTrainer()}
+  editSlot=id?S.slots.find(s=>s.id===id):null;const s=editSlot||{};
+  trainerOptions($("s-trainer"));if(s.trainerId&&tr(s.trainerId)?.active===false)$("s-trainer").insertAdjacentHTML("beforeend",`<option value="${esc(s.trainerId)}">${esc(tname(s.trainerId))}</option>`);
+  $("s-day").innerHTML=DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join("");
+  $("slot-title").textContent=editSlot?"Modifica turno":"Nuovo turno";
+  $("s-trainer").value=s.trainerId||(S.filter!=="all"?S.filter:$("s-trainer").value);
+  $("s-day").value=String(s.day??day??0);$("s-start").value=s.start||start||"";$("s-end").value=s.end||(start?pad(Math.min(23,+start.slice(0,2)+1))+start.slice(2):"");
+  $("s-role").value=s.role||"";$("s-site").value=s.site||([...(S.sites||[])][0]||"Cecina Center");$("s-from").value=s.validFrom||S.week;$("s-to").value=s.validTo||"";$("s-note").value=s.note||"";
+  $("s-del").hidden=!editSlot;$("s-del").dataset.label="Elimina turno";armDelete($("s-del"),()=>{$("dlg-slot").close();api("api_delete","slots",editSlot.id,"Turno eliminato")});
+  $("dlg-slot").showModal();
+}
+$("form-slot").addEventListener("submit",async e=>{e.preventDefault();
+  const d={trainerId:$("s-trainer").value,day:+$("s-day").value,start:$("s-start").value,end:$("s-end").value,role:$("s-role").value.trim(),site:$("s-site").value.trim(),validFrom:$("s-from").value,validTo:$("s-to").value,note:$("s-note").value.trim()};
+  if(mins(d.end)<=mins(d.start))return toast("La fine deve essere dopo l'inizio");
+  if(d.validTo&&d.validTo<d.validFrom)return toast("Data fine validità prima dell'inizio");
+  $("dlg-slot").close();await api("api_save","slots",{...(editSlot||{}),...d},"Turno salvato, calendario aggiornato")});
+
+let editAbs=null;
+function openAbs(id){
+  if(!S.trainers.length){toast("Aggiungi prima un trainer");return openTrainer()}
+  editAbs=id?S.absences.find(a=>a.id===id):null;const a=editAbs||{};
+  trainerOptions($("a-trainer"));trainerOptions($("a-sub"),'<option value="">— nessuno (turno scoperto) —</option>');
+  $("abs-title").textContent=editAbs?"Modifica assenza":"Nuova assenza";
+  $("a-trainer").value=a.trainerId||(S.filter!=="all"?S.filter:$("a-trainer").value);$("a-type").value=a.type||"Ferie";
+  $("a-from").value=a.from||today();$("a-to").value=a.to||a.from||today();$("a-allday").checked=a.allDay!==false;
+  $("a-start").value=a.start||"";$("a-end").value=a.end||"";$("a-sub").value=a.subId||"";$("a-note").value=a.note||"";
+  $("a-times").hidden=$("a-allday").checked;
+  $("a-del").hidden=!editAbs;$("a-del").dataset.label="Elimina assenza";armDelete($("a-del"),()=>{$("dlg-abs").close();api("api_delete","absences",editAbs.id,"Assenza eliminata")});
+  $("dlg-abs").showModal();
+}
+$("a-allday").onchange=()=>{$("a-times").hidden=$("a-allday").checked};
+$("a-from").onchange=()=>{if($("a-to").value<$("a-from").value)$("a-to").value=$("a-from").value};
+$("form-abs").addEventListener("submit",async e=>{e.preventDefault();
+  const d={trainerId:$("a-trainer").value,type:$("a-type").value,from:$("a-from").value,to:$("a-to").value,allDay:$("a-allday").checked,start:$("a-start").value,end:$("a-end").value,subId:$("a-sub").value,note:$("a-note").value.trim()};
+  if(d.to<d.from)return toast("La data di fine è prima dell'inizio");
+  if(!d.allDay&&(!d.start||!d.end||mins(d.end)<=mins(d.start)))return toast("Indica un orario valido");
+  if(d.subId===d.trainerId)return toast("Il sostituto non può essere lo stesso trainer");
+  $("dlg-abs").close();await api("api_save","absences",{...(editAbs||{}),...d},"Assenza salvata, calendario aggiornato")});
+
+let editTr=null,pickColor=COLORS[0];
+function openTrainer(id){
+  editTr=id?tr(id):null;const t=editTr||{};
+  $("tr-title").textContent=editTr?"Modifica trainer":"Nuovo trainer";$("t-name").value=t.name||"";$("t-kind").value=t.kind||"Trainer";$("t-active").checked=t.active!==false;
+  pickColor=COLORS.find(c=>c[0]===t.color)||COLORS[S.trainers.length%COLORS.length];
+  $("t-colors").innerHTML=COLORS.map((c,i)=>`<button type="button" style="--sw:${c[0]}" aria-label="Colore ${i+1}" aria-pressed="${c===pickColor}" data-c="${i}"></button>`).join("");
+  $("t-del").hidden=!editTr;$("t-del").dataset.label="Elimina trainer";
+  armDelete($("t-del"),async()=>{if(S.slots.some(s=>!s.deleted&&s.trainerId===editTr.id)||S.absences.some(a=>!a.deleted&&(a.trainerId===editTr.id||a.subId===editTr.id))){toast("Il trainer ha turni o assenze: rimuovili o segnalo non attivo");return}
+    $("dlg-trainer").close();await api("api_delete","trainers",editTr.id,"Trainer eliminato")});
+  $("dlg-trainer").showModal();
+}
+$("t-colors").onclick=e=>{const b=e.target.closest("[data-c]");if(!b)return;pickColor=COLORS[+b.dataset.c];[...$("t-colors").children].forEach(x=>x.setAttribute("aria-pressed",String(x===b)))};
+$("form-trainer").addEventListener("submit",async e=>{e.preventDefault();
+  const d={name:$("t-name").value.trim(),kind:$("t-kind").value,color:pickColor[0],gcolor:pickColor[1],active:$("t-active").checked};if(!d.name)return;
+  $("dlg-trainer").close();
+  await api("api_save","trainers",{...(editTr||{}),...d},"Trainer salvato")});
+
+
+/* ---------- server ---------- */
+async function run(fn,...args){
+  if(!navigator.onLine)throw new Error("Sei offline: collegati a internet e riprova.");
+  let r;
+  try{r=await fetch(window.ORARI_API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({fn,args}),redirect:"follow",cache:"no-store"})}
+  catch(e){throw new Error("Connessione non riuscita. Controlla internet e riprova.")}
+  let j;try{j=await r.json()}catch(e){throw new Error("Risposta non valida dal server ("+r.status+"). Riprova tra poco.")}
+  if(!j.ok)throw new Error(j.error||"Errore sconosciuto.");
+  return j.data;
+}
+function norm(d){
+  S.trainers=d.trainers.map(t=>({...t,active:t.active!=="FALSE"}));
+  S.slots=d.slots.map(s=>({...s,day:Number(s.day)}));
+  S.absences=d.absences.map(a=>({...a,allDay:a.allDay!=="FALSE"}));
+  status(S.trainers.length?"":(S.canEdit?"Nessun orario ancora: aggiungi i trainer e poi i turni settimanali.":"Orari non ancora pubblicati."));
+  render()}
+function lockUI(on,label){S.busy=on;document.querySelectorAll(".edit-only button").forEach(b=>b.disabled=on);if(label)$("b-sync").textContent=on?label:"Sincronizza calendario"}
+async function api(fn,...args){
+  const msg=args.pop();
+  lockUI(true,"Salvataggio…");
+  try{norm(await run(fn,S.pin,...args));toast(msg)}
+  catch(e){status(String(e&&e.message||e),true)}
+  finally{lockUI(false,"x")}}
+async function refresh(){if(S.busy||document.querySelector("dialog[open]"))return;try{norm(await run("api_load"))}catch(e){status("Impossibile leggere gli orari. Ricarica la pagina.",true)}}
+
+/* ---------- events ---------- */
+$("v-week").onclick=()=>setView("week");$("v-trainer").onclick=()=>setView("trainer");$("v-abs").onclick=()=>setView("abs");
+$("f-trainer").onchange=e=>{S.filter=e.target.value;render()};
+$("w-prev").onclick=()=>{S.week=addDays(S.week,-7);render()};$("w-next").onclick=()=>{S.week=addDays(S.week,7);render()};$("w-today").onclick=()=>{S.week=monday(today());S.mDay=null;S.scrolled=false;render()};
+$("b-slot").onclick=()=>openSlot();$("b-abs").onclick=()=>openAbs();$("b-trainer").onclick=()=>openTrainer();
+$("b-sync").onclick=()=>api("api_sync","Calendario allineato");
+document.addEventListener("click",e=>{
+  const st=e.target.closest("[data-site]");if(st){const x=st.dataset.site;S.sites=S.sites||new Set();S.sites.has(x)?S.sites.delete(x):S.sites.add(x);try{localStorage.setItem("ot-sites",JSON.stringify([...S.sites]))}catch(_){}render();return}
+  const dt=e.target.closest("[data-dt]");if(dt){S.mDay=+dt.dataset.dt;renderWeek();return}
+  if(!S.canEdit)return;
+  const col=e.target.closest(".col");if(col&&e.target===col){const m=S.gridLo+Math.floor(e.offsetY/HH*2)*30;return openSlot(null,+col.dataset.col,pad(Math.floor(m/60))+":"+pad(m%60))}
+  const s=e.target.closest("[data-slot]");if(s)return openSlot(s.dataset.slot);
+  const a=e.target.closest("[data-abs]");if(a)return openAbs(a.dataset.abs);
+  const t=e.target.closest("[data-trainer]");if(t)return openTrainer(t.dataset.trainer)});
+
+/* ---------- boot ---------- */
+try{const v=localStorage.getItem("ot-view");if(v)setView(v)}catch(e){}
+try{const ss=JSON.parse(localStorage.getItem("ot-sites")||"null");S.sites=new Set(Array.isArray(ss)?ss:["Cecina Center"])}catch(e){S.sites=new Set(["Cecina Center"])}
+window.matchMedia("(max-width:760px)").addEventListener("change",()=>renderWeek());setInterval(()=>{if(S.view==="week"&&!document.querySelector("dialog[open]"))renderWeek()},300000);
+(async()=>{
+  render();await refresh();setInterval(refresh,60000)})();
+</script>
+</body></html>
