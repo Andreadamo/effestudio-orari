@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://script.google.com" crossorigin>
+<link rel="preconnect" href="https://script.googleusercontent.com" crossorigin>
+<link rel="dns-prefetch" href="https://script.googleusercontent.com">
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
 <script src="config.js"></script>
 <title>Orari Trainer Effestudio</title>
@@ -136,6 +139,14 @@ label input,label select,label textarea{color:var(--fg);text-transform:none;lett
 @media (max-width:900px){.cols{grid-template-columns:1fr}.week-label{min-width:0}}
 @media (max-width:760px){.daytabs{display:flex}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* fluidità touch (Android/iOS) */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+*{-webkit-tap-highlight-color:transparent}
+button,a,select,label,summary,[role=button]{touch-action:manipulation}
+button:not(:disabled):active{opacity:.75}
+@media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+img{max-width:100%}
 </style>
 </head><body>
 
@@ -483,6 +494,7 @@ async function run(fn,...args){
   return j.data;
 }
 function norm(d){
+  try{localStorage.setItem("ot-data",JSON.stringify(d))}catch(_){}
   S.trainers=d.trainers.map(t=>({...t,active:t.active!=="FALSE"}));
   S.slots=d.slots.map(s=>({...s,day:Number(s.day)}));
   S.absences=d.absences.map(a=>({...a,allDay:a.allDay!=="FALSE"}));
@@ -517,6 +529,9 @@ try{const v=localStorage.getItem("ot-view");if(v)setView(v)}catch(e){}
 try{const ss=JSON.parse(localStorage.getItem("ot-sites")||"null");S.sites=new Set(Array.isArray(ss)?ss:["Cecina Center"])}catch(e){S.sites=new Set(["Cecina Center"])}
 window.matchMedia("(max-width:760px)").addEventListener("change",()=>renderWeek());setInterval(()=>{if(S.view==="week"&&!document.querySelector("dialog[open]"))renderWeek()},300000);
 (async()=>{
-  render();await refresh();setInterval(refresh,60000)})();
+  // apertura istantanea con gli ultimi orari salvati, poi aggiornamento dal server
+  let c=null;try{c=JSON.parse(localStorage.getItem("ot-data")||"null")}catch(_){}
+  if(c&&c.trainers){try{norm(c)}catch(_){render()}}else render();
+  await refresh();setInterval(refresh,60000)})();
 </script>
 </body></html>
